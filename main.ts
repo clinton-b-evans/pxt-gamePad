@@ -1,7 +1,7 @@
 /*!
  * Custom GamePad for micro:bit
  * Buttons: Blue(P16), Red(P15), Green(P13), Yellow(P14), Z-Click(P8)
- * Joystick: X(P1), Y(P2)  |  Motor: P12 (0–255)
+ * Joystick: X(P1), Y(P2)
  * License: LGPL-2.1
  */
 
@@ -29,14 +29,6 @@ enum GamePadEvent {
     Released = 1
 }
 
-//% block="motor state"
-enum Motor {
-    //% block="off"
-    Off = 0,
-    //% block="on"
-    On = 255
-}
-
 //% block="LED state"
 enum Led {
     //% block="off"
@@ -54,13 +46,12 @@ namespace gamePad {
     function initPins() {
         if (_inited) return
         // Buttons are externally biased; leave floating
-        pins.setPull(DigitalPin.P8,  PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P8, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P13, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P14, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P15, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P16, PinPullMode.PullNone)
-        // Motor PWM
-        pins.setPull(DigitalPin.P12, PinPullMode.PullNone)
+        // No pin initialization for Motor P12 needed now
         _inited = true
     }
 
@@ -98,8 +89,10 @@ namespace gamePad {
         initPins()
         const dp = btnToPin(btn)
         if (ev == GamePadEvent.Pressed) {
+            // Register an event handler for a LOW pulse (button pressed)
             pins.onPulsed(dp, PulseValue.Low, handler)
         } else {
+            // Register an event handler for a HIGH pulse (button released)
             pins.onPulsed(dp, PulseValue.High, handler)
         }
     }
@@ -121,17 +114,7 @@ namespace gamePad {
     }
 
     /**
-     * Vibration motor on P12 (0–255)
-     */
-    //% blockId=gp_motor_v4 block="vibration motor %state"
-    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
-    export function motor(state: Motor): void {
-        initPins()
-        pins.analogWritePin(AnalogPin.P12, <number>state)
-    }
-
-    /**
-     * LED on P16 (optional external LED)
+     * LED on P16 (optional external LED, shared with Blue button)
      */
     //% blockId=gp_led_v4 block="LED %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
