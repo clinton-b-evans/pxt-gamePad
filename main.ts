@@ -1,9 +1,8 @@
 /*!
  * @file gamePad/main.ts
- * @brief DFRobot's gamer pad MakeCode library.
- * @n Updated version with full 8-button + joystick support for Micro:bit.
- * @n Original © DFRobot, modified by Clinton (GetCTRL).
- * @n Licensed under GNU Lesser General Public License.
+ * @brief DFRobot's gamer pad MakeCode library — customized by Clinton (GetCTRL)
+ * @details Blue(P16), Red(P15), Green(P13), Yellow(P14), Z-Click(P8), Motor(P12)
+ * @license GNU Lesser General Public License
  */
 
 // ===========================================================
@@ -11,33 +10,27 @@
 // ===========================================================
 
 /**
- * User Buttons for DFRobot gamer:bit players.
+ * GamePad Buttons for DFRobot gamer:bit.
  */
 //%
-enum GamerBitPin {
-    //% block="X button (P1)"
-    P1 = DAL.MICROBIT_ID_IO_P1,
-    //% block="Y button (P2)"
-    P2 = DAL.MICROBIT_ID_IO_P2,
-    //% block="D-PAD up (P8)"
-    P8 = DAL.MICROBIT_ID_IO_P8,
-    //% block="D-PAD down (P13)"
-    P13 = DAL.MICROBIT_ID_IO_P13,
-    //% block="D-PAD left (P14)"
-    P14 = DAL.MICROBIT_ID_IO_P14,
-    //% block="D-PAD right (P15)"
-    P15 = DAL.MICROBIT_ID_IO_P15,
-    //% block="A (P16)"
-    P16 = DAL.MICROBIT_ID_IO_P16,
-    //% block="B (P0)"
-    P0 = DAL.MICROBIT_ID_IO_P0
+enum GamePadButton {
+    //% block="Blue (P16)"
+    Blue = DAL.MICROBIT_ID_IO_P16,
+    //% block="Red (P15)"
+    Red = DAL.MICROBIT_ID_IO_P15,
+    //% block="Green (P13)"
+    Green = DAL.MICROBIT_ID_IO_P13,
+    //% block="Yellow (P14)"
+    Yellow = DAL.MICROBIT_ID_IO_P14,
+    //% block="Z-Click (P8)"
+    ZClick = DAL.MICROBIT_ID_IO_P8
 }
 
 /**
- * Trigger Events for DFRobot gamer:bit players.
+ * Button event triggers.
  */
 //%
-enum GamerBitEvent {
+enum GamePadEvent {
     //% block="pressed"
     Down = DAL.MICROBIT_BUTTON_EVT_DOWN,
     //% block="released"
@@ -50,33 +43,22 @@ enum GamerBitEvent {
 // NAMESPACE: gamePad
 // ===========================================================
 
-//% weight=10 color=#DF6721 icon="\uf11b" block="gamePad"
+//% color=#DF6721 icon="\uf11b" block="gamePad"
 namespace gamePad {
-    let PIN_INIT = 0;
+    let PIN_INIT = 0
 
-    export enum Vibrator { 
-        //% block="stop"
-        V0 = 0,
-        //% block="vibrate"
-        V1 = 255
-    }
-
-    export enum Intensity { 
-        //% block="stop"
-        I0 = 0,
-        //% block="weak"
-        I1 = 100,
-        //% block="medium"
-        I2 = 180,
-        //% block="strong"
-        I3 = 225
+    export enum Motor {
+        //% block="off"
+        Off = 0,
+        //% block="on"
+        On = 255
     }
 
     export enum Led {
         //% block="off"
-        OFF = 0,
+        Off = 0,
         //% block="on"
-        ON = 1
+        On = 1
     }
 
     // -----------------------------------------------------------
@@ -84,18 +66,18 @@ namespace gamePad {
     // -----------------------------------------------------------
 
     //% shim=gamerpad::init
-    function init(): void { return; }
+    function init(): void { return }
 
     function PinInit(): void {
-        pins.setPull(DigitalPin.P1, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P2, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P8, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P13, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P14, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P15, PinPullMode.PullNone);
-        pins.setPull(DigitalPin.P0, PinPullMode.PullUp);
-        pins.setPull(DigitalPin.P16, PinPullMode.PullUp);
-        PIN_INIT = 1;
+        // Disable internal pull-ups for external gamepad control lines
+        pins.setPull(DigitalPin.P8, PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P13, PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P14, PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P15, PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P16, PinPullMode.PullNone)
+        // Motor pin
+        pins.setPull(DigitalPin.P12, PinPullMode.PullNone)
+        PIN_INIT = 1
     }
 
     // -----------------------------------------------------------
@@ -103,91 +85,74 @@ namespace gamePad {
     // -----------------------------------------------------------
 
     /**
-     * Check if a button is pressed.
+     * Check if a gamePad button is pressed.
      */
     //% weight=90
-    //% blockId=gamePad_keyState block="button %button is pressed"
-    //% button.fieldEditor="gridpicker" button.fieldOptions.columns=3
-    export function keyState(button: GamerBitPin): boolean {
-        if (!PIN_INIT) PinInit();
-        return pins.digitalReadPin(<number>button) == 0;
+    //% blockId=gamePad_buttonPressed block="button %btn is pressed"
+    //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
+    export function buttonPressed(btn: GamePadButton): boolean {
+        if (!PIN_INIT) PinInit()
+        return pins.digitalReadPin(<number>btn) == 0
     }
 
     /**
      * Run code when a button event occurs.
      */
     //% weight=80
-    //% blockGap=48
-    //% blockId=gamePad_onEvent block="on button %button %event"
-    //% button.fieldEditor="gridpicker" button.fieldOptions.columns=3
+    //% blockId=gamePad_onButtonEvent block="on %btn %event"
+    //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
     //% event.fieldEditor="gridpicker" event.fieldOptions.columns=3
-    export function onEvent(button: GamerBitPin, event: GamerBitEvent, handler: Action): void {
-        init();
-        if (!PIN_INIT) PinInit();
-        control.onEvent(<number>button, <number>event, handler);
+    export function onButtonEvent(btn: GamePadButton, event: GamePadEvent, handler: Action): void {
+        init()
+        if (!PIN_INIT) PinInit()
+        control.onEvent(<number>btn, <number>event, handler)
     }
 
     // -----------------------------------------------------------
-    // Joystick Axes
+    // Joystick Axes (P1 and P2) — analog read only
     // -----------------------------------------------------------
 
     /**
-     * Get joystick X-axis (P1).
+     * Get joystick X-axis value (P1).
      */
     //% weight=70
     //% blockId=gamePad_joystickX block="joystick X (P1)"
     export function joystickX(): number {
-        return pins.analogReadPin(AnalogPin.P1);
+        return pins.analogReadPin(AnalogPin.P1)
     }
 
     /**
-     * Get joystick Y-axis (P2).
+     * Get joystick Y-axis value (P2).
      */
     //% weight=70
     //% blockId=gamePad_joystickY block="joystick Y (P2)"
     export function joystickY(): number {
-        return pins.analogReadPin(AnalogPin.P2);
+        return pins.analogReadPin(AnalogPin.P2)
     }
 
     // -----------------------------------------------------------
-    // Vibration Motor
+    // Motor (P12) and LED indicator (P16 optional reuse)
     // -----------------------------------------------------------
 
     /**
-     * Turn the vibration motor on/off.
+     * Turn vibration motor on/off.
      */
     //% weight=60
-    //% blockId=gamePad_vibratorMotor block="vibrator motor %index"
-    //% index.fieldEditor="gridpicker" index.fieldOptions.columns=2
-    export function vibratorMotor(index: Vibrator): void {
-        vibratorMotorSpeed(<number>index);
+    //% blockId=gamePad_motor block="vibration motor %state"
+    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
+    export function motor(state: Motor): void {
+        if (!PIN_INIT) PinInit()
+        pins.analogWritePin(AnalogPin.P12, <number>state)
     }
 
     /**
-     * Set vibration motor intensity (0–255).
-     */
-    //% weight=50
-    //% blockGap=48
-    //% blockId=gamePad_vibratorMotorSpeed block="vibration motor intensity %degree"
-    //% degree.min=0 degree.max=255
-    export function vibratorMotorSpeed(degree: number): void {
-        if (!PIN_INIT) PinInit();
-        const value = Math.min(degree, 255);
-        pins.analogWritePin(AnalogPin.P12, value);
-    }
-
-    // -----------------------------------------------------------
-    // LED Indicator
-    // -----------------------------------------------------------
-
-    /**
-     * Turn the LED indicator on or off.
+     * LED indicator (use separate onboard or external LED).
      */
     //% weight=40
-    //% blockId=gamePad_led block="LED %index"
-    //% index.fieldEditor="gridpicker" index.fieldOptions.columns=2
-    export function led(index: Led): void {
-        if (!PIN_INIT) PinInit();
-        pins.digitalWritePin(DigitalPin.P16, <number>index);
+    //% blockId=gamePad_led block="LED %state"
+    //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
+    export function led(state: Led): void {
+        if (!PIN_INIT) PinInit()
+        pins.digitalWritePin(DigitalPin.P16, <number>state)
     }
 }
