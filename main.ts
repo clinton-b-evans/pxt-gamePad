@@ -1,5 +1,5 @@
 /*!
- * @file gamePad/main.ts
+ * @file main.ts
  * @brief DFRobot's gamer pad MakeCode library — customized by Clinton (GetCTRL)
  * @details Blue(P16), Red(P15), Green(P13), Yellow(P14), Z-Click(P8), Motor(P12)
  * @license GNU Lesser General Public License
