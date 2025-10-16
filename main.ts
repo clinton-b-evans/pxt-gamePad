@@ -5,57 +5,52 @@
  * License: LGPL-2.1
  */
 
+/* ---------------- Enums (numeric literals; top-level) ---------------- */
+
+//% block="gamePad button"
+enum GamePadButton {
+    //% block="Blue (P16)"
+    Blue = 0,
+    //% block="Red (P15)"
+    Red = 1,
+    //% block="Green (P13)"
+    Green = 2,
+    //% block="Yellow (P14)"
+    Yellow = 3,
+    //% block="Z-Click (P8)"
+    ZClick = 4
+}
+
+//% block="gamePad event"
+enum GamePadEvent {
+    //% block="pressed"
+    Pressed = 0,
+    //% block="released"
+    Released = 1
+}
+
+//% block="motor state"
+enum Motor {
+    //% block="off"
+    Off = 0,
+    //% block="on"
+    On = 255
+}
+
+//% block="LED state"
+enum Led {
+    //% block="off"
+    Off = 0,
+    //% block="on"
+    On = 1
+}
+
+/* ---------------- Implementation ---------------- */
+
 //% color=#DF6721 icon="\uf11b" block="gamePad"
 namespace gamePad {
-    // ---- Label enum (no values; MakeCode requires simple numeric literals) ----
-    export enum GamePadButton {
-        //% block="Blue (P16)"
-        Blue,
-        //% block="Red (P15)"
-        Red,
-        //% block="Green (P13)"
-        Green,
-        //% block="Yellow (P14)"
-        Yellow,
-        //% block="Z-Click (P8)"
-        ZClick
-    }
-
-    // Map labels -> actual pins
-    function btnToPin(btn: GamePadButton): DigitalPin {
-        switch (btn) {
-            case GamePadButton.Blue:   return DigitalPin.P16
-            case GamePadButton.Red:    return DigitalPin.P15
-            case GamePadButton.Green:  return DigitalPin.P13
-            case GamePadButton.Yellow: return DigitalPin.P14
-            case GamePadButton.ZClick: return DigitalPin.P8
-        }
-        // default (never hit)
-        return DigitalPin.P16
-    }
-
-    export enum GamePadEvent {
-        //% block="pressed"
-        Pressed,
-        //% block="released"
-        Released
-    }
-
-    export enum Motor {
-        //% block="off"
-        Off = 0,
-        //% block="on"
-        On = 255
-    }
-
-    export enum Led {
-        //% block="off"
-        Off = 0,
-        //% block="on"
-        On = 1
-    }
-
     let _inited = false
+
     function initPins() {
         if (_inited) return
         // Buttons are externally biased; leave floating
@@ -64,28 +59,38 @@ namespace gamePad {
         pins.setPull(DigitalPin.P14, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P15, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P16, PinPullMode.PullNone)
-        pins.setPull(DigitalPin.P12, PinPullMode.PullNone) // motor PWM
+        // Motor PWM
+        pins.setPull(DigitalPin.P12, PinPullMode.PullNone)
         _inited = true
     }
 
-    // ---------------- Buttons ----------------
+    // Map enum label -> actual DigitalPin
+    function btnToPin(btn: GamePadButton): DigitalPin {
+        switch (btn) {
+            case GamePadButton.Blue:   return DigitalPin.P16
+            case GamePadButton.Red:    return DigitalPin.P15
+            case GamePadButton.Green:  return DigitalPin.P13
+            case GamePadButton.Yellow: return DigitalPin.P14
+            case GamePadButton.ZClick: return DigitalPin.P8
+        }
+        return DigitalPin.P16
+    }
 
     /**
      * Check if a button is currently pressed (active-low).
      */
-    //% blockId=gp_buttonPressed_v3
+    //% blockId=gp_buttonPressed_v4
     //% block="button %btn is pressed"
     //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
     export function buttonPressed(btn: GamePadButton): boolean {
         initPins()
-        const dp = btnToPin(btn)
-        return pins.digitalReadPin(dp) == 0
+        return pins.digitalReadPin(btnToPin(btn)) == 0
     }
 
     /**
      * Run code when a button is pressed or released.
      */
-    //% blockId=gp_onButtonEvent_v3
+    //% blockId=gp_onButtonEvent_v4
     //% block="on %btn %ev"
     //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
     //% ev.fieldEditor="gridpicker" ev.fieldOptions.columns=3
@@ -99,12 +104,10 @@ namespace gamePad {
         }
     }
 
-    // --------------- Joystick ----------------
-
     /**
      * Joystick X-axis (P1), 0–1023
      */
-    //% blockId=gp_joystickX_v3 block="joystick X (P1)"
+    //% blockId=gp_joystickX_v4 block="joystick X (P1)"
     export function joystickX(): number {
         return pins.analogReadPin(AnalogPin.P1)
     }
@@ -112,17 +115,15 @@ namespace gamePad {
     /**
      * Joystick Y-axis (P2), 0–1023
      */
-    //% blockId=gp_joystickY_v3 block="joystick Y (P2)"
+    //% blockId=gp_joystickY_v4 block="joystick Y (P2)"
     export function joystickY(): number {
         return pins.analogReadPin(AnalogPin.P2)
     }
 
-    // ---------------- Motor & LED ----------------
-
     /**
      * Vibration motor on P12 (0–255)
      */
-    //% blockId=gp_motor_v3 block="vibration motor %state"
+    //% blockId=gp_motor_v4 block="vibration motor %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function motor(state: Motor): void {
         initPins()
@@ -132,7 +133,7 @@ namespace gamePad {
     /**
      * LED on P16 (optional external LED)
      */
-    //% blockId=gp_led_v3 block="LED %state"
+    //% blockId=gp_led_v4 block="LED %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function led(state: Led): void {
         initPins()
