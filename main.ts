@@ -7,18 +7,31 @@
 
 //% color=#DF6721 icon="\uf11b" block="gamePad"
 namespace gamePad {
-    // ---- Button enum (DigitalPin values) ----
+    // ---- Label enum (no values; MakeCode requires simple numeric literals) ----
     export enum GamePadButton {
         //% block="Blue (P16)"
-        Blue = <number>DigitalPin.P16,
+        Blue,
         //% block="Red (P15)"
-        Red = <number>DigitalPin.P15,
+        Red,
         //% block="Green (P13)"
-        Green = <number>DigitalPin.P13,
+        Green,
         //% block="Yellow (P14)"
-        Yellow = <number>DigitalPin.P14,
+        Yellow,
         //% block="Z-Click (P8)"
-        ZClick = <number>DigitalPin.P8
+        ZClick
+    }
+
+    // Map labels -> actual pins
+    function btnToPin(btn: GamePadButton): DigitalPin {
+        switch (btn) {
+            case GamePadButton.Blue:   return DigitalPin.P16
+            case GamePadButton.Red:    return DigitalPin.P15
+            case GamePadButton.Green:  return DigitalPin.P13
+            case GamePadButton.Yellow: return DigitalPin.P14
+            case GamePadButton.ZClick: return DigitalPin.P8
+        }
+        // default (never hit)
+        return DigitalPin.P16
     }
 
     export enum GamePadEvent {
@@ -45,13 +58,13 @@ namespace gamePad {
     let _inited = false
     function initPins() {
         if (_inited) return
-        // Leave buttons floating (the pad biases them); motor pin is PWM
-        pins.setPull(DigitalPin.P8, PinPullMode.PullNone)
+        // Buttons are externally biased; leave floating
+        pins.setPull(DigitalPin.P8,  PinPullMode.PullNone)
         pins.setPull(DigitalPin.P13, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P14, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P15, PinPullMode.PullNone)
         pins.setPull(DigitalPin.P16, PinPullMode.PullNone)
-        pins.setPull(DigitalPin.P12, PinPullMode.PullNone)
+        pins.setPull(DigitalPin.P12, PinPullMode.PullNone) // motor PWM
         _inited = true
     }
 
@@ -60,26 +73,25 @@ namespace gamePad {
     /**
      * Check if a button is currently pressed (active-low).
      */
-    //% blockId=gp_buttonPressed_v2
+    //% blockId=gp_buttonPressed_v3
     //% block="button %btn is pressed"
     //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
     export function buttonPressed(btn: GamePadButton): boolean {
         initPins()
-        const dp = <DigitalPin><number>btn
+        const dp = btnToPin(btn)
         return pins.digitalReadPin(dp) == 0
     }
 
     /**
      * Run code when a button is pressed or released.
-     * (Uses pin pulse detection – no native shim required.)
      */
-    //% blockId=gp_onButtonEvent_v2
+    //% blockId=gp_onButtonEvent_v3
     //% block="on %btn %ev"
     //% btn.fieldEditor="gridpicker" btn.fieldOptions.columns=3
     //% ev.fieldEditor="gridpicker" ev.fieldOptions.columns=3
     export function onButtonEvent(btn: GamePadButton, ev: GamePadEvent, handler: () => void) {
         initPins()
-        const dp = <DigitalPin><number>btn
+        const dp = btnToPin(btn)
         if (ev == GamePadEvent.Pressed) {
             pins.onPulsed(dp, PulseValue.Low, handler)
         } else {
@@ -92,7 +104,7 @@ namespace gamePad {
     /**
      * Joystick X-axis (P1), 0–1023
      */
-    //% blockId=gp_joystickX_v2 block="joystick X (P1)"
+    //% blockId=gp_joystickX_v3 block="joystick X (P1)"
     export function joystickX(): number {
         return pins.analogReadPin(AnalogPin.P1)
     }
@@ -100,7 +112,7 @@ namespace gamePad {
     /**
      * Joystick Y-axis (P2), 0–1023
      */
-    //% blockId=gp_joystickY_v2 block="joystick Y (P2)"
+    //% blockId=gp_joystickY_v3 block="joystick Y (P2)"
     export function joystickY(): number {
         return pins.analogReadPin(AnalogPin.P2)
     }
@@ -110,7 +122,7 @@ namespace gamePad {
     /**
      * Vibration motor on P12 (0–255)
      */
-    //% blockId=gp_motor_v2 block="vibration motor %state"
+    //% blockId=gp_motor_v3 block="vibration motor %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function motor(state: Motor): void {
         initPins()
@@ -120,7 +132,7 @@ namespace gamePad {
     /**
      * LED on P16 (optional external LED)
      */
-    //% blockId=gp_led_v2 block="LED %state"
+    //% blockId=gp_led_v3 block="LED %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     export function led(state: Led): void {
         initPins()
